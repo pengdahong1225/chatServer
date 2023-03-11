@@ -39,7 +39,7 @@ private:
 
     void Login(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
     void Register(const muduo::net::TcpConnectionPtr& conn, ClientInfo& user);
-    void SendP2P(const muduo::net::TcpConnectionPtr &conn, const muduo::string &source, const muduo::string &destination, const muduo::string &message);
+    void SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
 
     /* get userdata from mysql */
     DBResult GetUserData(const muduo::string& account, ClientInfo &user);

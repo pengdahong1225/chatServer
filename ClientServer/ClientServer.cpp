@@ -56,3 +56,7 @@ muduo::string& ClientInfo::GetMessage()
 {
     return message;
 }
+muduo::string& ClientInfo::GetMsgID()
+{
+    return messageID;
+}

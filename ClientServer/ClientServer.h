@@ -25,6 +25,7 @@ public:
     muduo::string& GetSource();
     muduo::string& GetDestination();
     muduo::string& GetMessage();
+    muduo::string& GetMsgID();
 private:
     muduo::string account;
     muduo::string passwd;
@@ -38,6 +39,8 @@ private:
     muduo::string source;
     muduo::string destination;
     muduo::string message;
+
+    muduo::string messageID; //客户端要用，服务端不用管直接转发
 public:
     std::vector<muduo::string> friendList;
 };

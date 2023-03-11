@@ -96,7 +96,7 @@ void ConnectServer::onStringMessage(const muduo::net::TcpConnectionPtr &conn, co
     }
     case Mode_Send_P2P:
     {
-        this->SendP2P(conn, userInfo.GetSource(), userInfo.GetDestination(), userInfo.GetMessage());
+        this->SendP2P(conn, userInfo);
         break;
     }
     case Mode_Send_Broad:
@@ -186,7 +186,7 @@ void ConnectServer::Register(const muduo::net::TcpConnectionPtr &conn, ClientInf
     uint64_t timer = std::atol(time.toString().c_str());
 
     sprintf(sql, "insert into userdata values('%s','%s','%s','%s','%s','%s',%ld,%ld)", user.GetAccount().c_str(),
-            user.GetPasswd().c_str(), user.GetNickname().c_str(), user.GetSex(), user.GetPhone(), user.GetEmail(),timer, timer);
+            user.GetPasswd().c_str(), user.GetNickname().c_str(), user.GetSex().c_str(), user.GetPhone().c_str(), user.GetEmail().c_str(),timer, timer);
     std::cout << "register sql = " << sql << std::endl;
     ret = DBServer::query(mysql, sql);
     if (ret != 0)
@@ -439,16 +439,16 @@ void ConnectServer::UpdateLoginTime(const muduo::string& account)
     DBServer::closeDBServer(mysql);
 }
 
-void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, const muduo::string &source, const muduo::string &destination, const muduo::string &message)
+void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
 {
     if (connections_[conn] != "")
     {
         /* find connPtr(key) by account(value) */
         std::unordered_map<muduo::net::TcpConnectionPtr, muduo::string>::iterator iter = connections_.end();
         iter = std::find_if(connections_.begin(), connections_.end(),
-                            [&destination](const std::pair<muduo::net::TcpConnectionPtr, muduo::string> &item)
+                            [&user](const std::pair<muduo::net::TcpConnectionPtr, muduo::string> &item)
                             {
-                                return (item.second == destination);
+                                return (item.second == user.GetDestination());
                             });
         if (iter != connections_.end()) // destination online
         {
@@ -456,9 +456,10 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, const mudu
             json json_;
             json_["mode"] = Mode_Send_P2P;
             json_["result"] = EN_Succ;
-            json_["source"] = source;
-            json_["destination"] = destination;
-            json_["message"] = message;
+            json_["source"] = user.GetSource();
+            json_["destination"] = user.GetDestination();
+            json_["message"] = user.GetMessage();
+            json_["msgID"] = user.GetMsgID();
             muduo::string data = json_.dump();
             codec_.send(get_pointer(iter->first), data);
 
@@ -466,6 +467,7 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, const mudu
             json_.clear();
             json_["mode"] = Mode_ChatResponse;
             json_["result"] = EN_Succ;
+            json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();
             codec_.send(get_pointer(conn), response);
         }
@@ -474,6 +476,7 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, const mudu
             json json_;
             json_["mode"] = Mode_ChatResponse;
             json_["result"] = EN_Done;
+            json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();
             codec_.send(get_pointer(conn), response);
         }

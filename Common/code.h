@@ -86,6 +86,7 @@ public:
       user.GetSource() = json_.at("source");
       user.GetDestination() = json_.at("destination");
       user.GetMessage() = json_.at("message");
+      user.GetMsgID() = json_.at("msgID");
       messageCallback_(conn, mode, user);
       break;
     }
