@@ -7,19 +7,30 @@
 #include <muduo/net/Buffer.h>
 #include <muduo/net/Endian.h>
 #include <muduo/net/TcpConnection.h>
-#include <nlohmann/json.hpp>
+#include <json.cpp>
 
 enum Session_Mode
 {
+  //  connect,register,login
   Mode_Register = 1,
   Mode_Login = 2,
-  Mode_Send_P2P = 3,
-  Mode_Send_Broad = 4,
-  Mode_Send_File = 5,
-  Mode_LoginResponse = 6,
-  Mode_RegisterResponse = 7,
-  Mode_ConnResponse = 8,
-  Mode_ChatResponse = 9,
+  Mode_LoginResponse = 3,
+  Mode_RegisterResponse = 4,
+  Mode_ConnResponse = 5,
+  // chat
+  Mode_SendP2P = 6,
+  Mode_P2PResponse = 7,
+  Mode_SendBroad = 8,
+  Mode_BroadResponse = 9,
+  // file、picture
+  Mode_SendFile = 10,
+  Mode_FileResponse = 11,
+  Mode_SendPic = 12,
+  Mode_PicResponse = 13,
+  // formation set
+  Mode_AddFriend = 14,
+  Mode_DeleteFriend = 15,
+  Mode_ModifyInfo = 16,
 };
 
 enum Session_Result
@@ -49,13 +60,13 @@ public:
     while (buf->readableBytes() > 0)
       data.append(buf->retrieveAllAsString());
     buf->retrieveAll();
-    int32_t length = std::atoi(data.substr(0,kHeaderLen).c_str());
+    int32_t length = std::atoi(data.substr(0, kHeaderLen).c_str());
     muduo::string msg = data.substr(kHeaderLen);
-    if(length!=msg.size())
+    if (length != msg.size())
     {
       LOG_ERROR << "LengthHeaderCodec::onMessage"
-                  << " -> "
-                  << "the length of package is error";
+                << " -> "
+                << "the length of package is error";
     }
     /* decode */
     nlohmann::json json_ = nlohmann::json::parse(msg.c_str());
@@ -80,7 +91,7 @@ public:
       messageCallback_(conn, mode, user);
       break;
     }
-    case Mode_Send_P2P:
+    case Mode_SendP2P:
     {
       ClientInfo user;
       user.GetSource() = json_.at("source");
@@ -90,14 +101,44 @@ public:
       messageCallback_(conn, mode, user);
       break;
     }
-    case Mode_Send_Broad:
+    case Mode_SendBroad:
     {
-      //...
+      //...暂时没有群聊
       break;
     }
-    case Mode_Send_File:
+    case Mode_SendFile:
     {
-      //...
+      ClientInfo user;
+      user.GetSource() = json_.at("source");
+      user.GetDestination() = json_.at("destination");
+      user.GetMessage() = json_.at("message");
+      user.GetMsgID() = json_.at("msgID");
+      messageCallback_(conn, mode, user);
+      break;
+    }
+    case Mode_SendPic:
+    {
+      ClientInfo user;
+      user.GetSource() = json_.at("source");
+      user.GetDestination() = json_.at("destination");
+      user.GetMessage() = json_.at("message");
+      user.GetMsgID() = json_.at("msgID");
+      messageCallback_(conn, mode, user);
+      break;
+    }
+    case Mode_AddFriend:
+    {
+      
+      break;
+    }
+    case Mode_DeleteFriend:
+    {
+
+      break;
+    }
+    case Mode_ModifyInfo:
+    {
+
       break;
     }
     default:
@@ -117,7 +158,7 @@ public:
 
 private:
   StringMessageCallback messageCallback_;
-  const static size_t kHeaderLen = sizeof(int32_t);//4字节
+  const static size_t kHeaderLen = sizeof(int32_t); // 4字节包头
 };
 
 #endif

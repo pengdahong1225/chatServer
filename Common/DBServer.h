@@ -7,10 +7,10 @@
 #include <unistd.h>
 #include <string>
 
-struct DBaddr{
-    const char* ip = "162.14.116.63"; //tencent
-    const char* user = "root";
-    const char* passwd = "1225";
+struct DBConfig{
+    const char* ip = "rm-2vcnd09f392wgd9hoho.rwlb.cn-chengdu.rds.aliyuncs.com"; //阿里云 RDS
+    const char* user = "messi_pengdahong";
+    const char* passwd = "1225Gkl_";
     const char* database = "chatServer";
 };
 
@@ -27,7 +27,7 @@ public:
     static int field_count(MYSQL* mysql);
     static void free_result(MYSQL_RES* result);
 private:
-    static struct DBaddr addr_;
+    static struct DBConfig addr_;
 };
 
 #endif

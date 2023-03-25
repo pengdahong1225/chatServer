@@ -106,7 +106,12 @@ void ConnectServer::onStringMessage(const muduo::net::TcpConnectionPtr &conn, co
     }
     case Mode_Send_File:
     {
-        //...
+        this->SendFile(conn, userInfo);
+        break;
+    }
+    case Mode_Send_Pic:
+    {
+        this->SendPic(conn, userInfo);
         break;
     }
     default:
@@ -443,7 +448,7 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo
 {
     if (connections_[conn] != "")
     {
-        /* find connPtr(key) by account(value) */
+        /* find connPtr(key) by destination(value) */
         std::unordered_map<muduo::net::TcpConnectionPtr, muduo::string>::iterator iter = connections_.end();
         iter = std::find_if(connections_.begin(), connections_.end(),
                             [&user](const std::pair<muduo::net::TcpConnectionPtr, muduo::string> &item)
@@ -475,6 +480,94 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo
         {
             json json_;
             json_["mode"] = Mode_ChatResponse;
+            json_["result"] = EN_Done;
+            json_["msgID"] = user.GetMsgID();
+            muduo::string response = json_.dump();
+            codec_.send(get_pointer(conn), response);
+        }
+    }
+}
+
+void ConnectServer::SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+{
+    if (connections_[conn] != "")
+    {
+        /* find connPtr(key) by destination(value) */
+        std::unordered_map<muduo::net::TcpConnectionPtr, muduo::string>::iterator iter = connections_.end();
+        iter = std::find_if(connections_.begin(), connections_.end(),
+                            [&user](const std::pair<muduo::net::TcpConnectionPtr, muduo::string> &item)
+                            {
+                                return (item.second == user.GetDestination());
+                            });
+        if (iter != connections_.end()) // destination online
+        {
+            // send data to destination
+            json json_;
+            json_["mode"] = Mode_Send_File;
+            json_["result"] = EN_Succ;
+            json_["source"] = user.GetSource();
+            json_["destination"] = user.GetDestination();
+            json_["message"] = user.GetMessage();
+            json_["msgID"] = user.GetMsgID();
+            muduo::string data = json_.dump();  //序列化
+            codec_.send(get_pointer(iter->first), data);
+
+            // send response to source
+            json_.clear();
+            json_["mode"] = Mode_FileResponse;
+            json_["result"] = EN_Succ;
+            json_["msgID"] = user.GetMsgID();
+            muduo::string response = json_.dump();
+            codec_.send(get_pointer(conn), response);
+        }
+        else // destination not online
+        {
+            json json_;
+            json_["mode"] = Mode_FileResponse;
+            json_["result"] = EN_Done;
+            json_["msgID"] = user.GetMsgID();
+            muduo::string response = json_.dump();
+            codec_.send(get_pointer(conn), response);
+        }
+    }
+}
+
+void ConnectServer::SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+{
+    if (connections_[conn] != "")
+    {
+        /* find connPtr(key) by destination(value) */
+        std::unordered_map<muduo::net::TcpConnectionPtr, muduo::string>::iterator iter = connections_.end();
+        iter = std::find_if(connections_.begin(), connections_.end(),
+                            [&user](const std::pair<muduo::net::TcpConnectionPtr, muduo::string> &item)
+                            {
+                                return (item.second == user.GetDestination());
+                            });
+        if (iter != connections_.end()) // destination online
+        {
+            // send data to destination
+            json json_;
+            json_["mode"] = Mode_Send_Pic;
+            json_["result"] = EN_Succ;
+            json_["source"] = user.GetSource();
+            json_["destination"] = user.GetDestination();
+            json_["message"] = user.GetMessage();
+            json_["msgID"] = user.GetMsgID();
+            muduo::string data = json_.dump();  //序列化
+            codec_.send(get_pointer(iter->first), data);
+
+            // send response to source
+            json_.clear();
+            json_["mode"] = Mode_PicResponse;
+            json_["result"] = EN_Succ;
+            json_["msgID"] = user.GetMsgID();
+            muduo::string response = json_.dump();
+            codec_.send(get_pointer(conn), response);
+        }
+        else // destination not online
+        {
+            json json_;
+            json_["mode"] = Mode_PicResponse;
             json_["result"] = EN_Done;
             json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();

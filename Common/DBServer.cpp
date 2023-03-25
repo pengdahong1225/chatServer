@@ -1,5 +1,5 @@
 #include "DBServer.h"
-struct DBaddr DBServer::addr_;
+struct DBConfig DBServer::addr_;
 
 MYSQL* DBServer::MYSQL_INIT(MYSQL* mysql)
 {
