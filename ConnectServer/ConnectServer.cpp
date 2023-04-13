@@ -94,30 +94,45 @@ void ConnectServer::onStringMessage(const muduo::net::TcpConnectionPtr &conn, co
         }
         break;
     }
-    case Mode_Send_P2P:
+    case Mode_SendP2P:
     {
         this->SendP2P(conn, userInfo);
         break;
     }
-    case Mode_Send_Broad:
+    case Mode_SendBroad:
     {
         //...
         break;
     }
-    case Mode_Send_File:
+    case Mode_SendFile:
     {
         this->SendFile(conn, userInfo);
         break;
     }
-    case Mode_Send_Pic:
+    case Mode_SendPic:
     {
         this->SendPic(conn, userInfo);
+        break;
+    }
+    case Mode_AddFriend:
+    {
+
+        break;
+    }
+    case Mode_DeleteFriend:
+    {
+
+        break;
+    }
+    case Mode_ModifyInfo:
+    {
+
         break;
     }
     default:
     {
         json json_;
-        json_["mode"] = Mode_ChatResponse;
+        json_["mode"] = Mode_ErrorResponse;
         json_["result"] = EN_ModeErr;
         muduo::string response = json_.dump();
         codec_.send(get_pointer(conn), response);
@@ -459,7 +474,7 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo
         {
             // send data to destination
             json json_;
-            json_["mode"] = Mode_Send_P2P;
+            json_["mode"] = Mode_SendP2P;
             json_["result"] = EN_Succ;
             json_["source"] = user.GetSource();
             json_["destination"] = user.GetDestination();
@@ -470,7 +485,7 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo
 
             // send response to source
             json_.clear();
-            json_["mode"] = Mode_ChatResponse;
+            json_["mode"] = Mode_ErrorResponse;
             json_["result"] = EN_Succ;
             json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();
@@ -479,7 +494,7 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo
         else // destination not online
         {
             json json_;
-            json_["mode"] = Mode_ChatResponse;
+            json_["mode"] = Mode_ErrorResponse;
             json_["result"] = EN_Done;
             json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();
@@ -503,7 +518,7 @@ void ConnectServer::SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInf
         {
             // send data to destination
             json json_;
-            json_["mode"] = Mode_Send_File;
+            json_["mode"] = Mode_SendFile;
             json_["result"] = EN_Succ;
             json_["source"] = user.GetSource();
             json_["destination"] = user.GetDestination();
@@ -547,7 +562,7 @@ void ConnectServer::SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo
         {
             // send data to destination
             json json_;
-            json_["mode"] = Mode_Send_Pic;
+            json_["mode"] = Mode_SendPic;
             json_["result"] = EN_Succ;
             json_["source"] = user.GetSource();
             json_["destination"] = user.GetDestination();

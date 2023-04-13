@@ -4,6 +4,7 @@
 #include "../Common/code.h"
 #include "../Common/DBServer.h"
 #include "../ClientServer/ClientServer.h"
+#include "log.h"
 #include <unordered_map>
 #include <vector>
 #include <set>
@@ -14,12 +15,6 @@
 #include <muduo/base/Mutex.h>
 #include <muduo/net/TcpServer.h>
 #include <muduo/net/EventLoop.h>
-
-enum DBResult{
-    DB_Succ = 1,
-    DB_Done = 2, // no this user in db
-    DB_Error = 3,
-};
 
 class ConnectServer : muduo::noncopyable
 {

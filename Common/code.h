@@ -2,6 +2,7 @@
 #define _CODE_H_
 
 #include "../ClientServer/ClientServer.h"
+#include "log.h"
 #include <iostream>
 #include <muduo/base/Logging.h>
 #include <muduo/net/Buffer.h>
@@ -31,6 +32,7 @@ enum Session_Mode
   Mode_AddFriend = 14,
   Mode_DeleteFriend = 15,
   Mode_ModifyInfo = 16,
+  Mode_ErrorResponse = 17,
 };
 
 enum Session_Result
@@ -41,6 +43,12 @@ enum Session_Result
   EN_PasswdErr = 4,
   EN_Succ = 5,
   EN_Done = 6,
+};
+
+enum DBResult{
+    DB_Succ = 1,
+    DB_Done = 2, // no this user in db
+    DB_Error = 3,
 };
 
 class LengthHeaderCodec : muduo::noncopyable
@@ -128,17 +136,26 @@ public:
     }
     case Mode_AddFriend:
     {
-      
+      ClientInfo user;
+      user.GetSource() = json_.at("source");
+      user.GetDestination() = json_.at("destination");
+      messageCallback_(conn, mode, user);
       break;
     }
     case Mode_DeleteFriend:
     {
-
+      ClientInfo user;
+      user.GetSource() = json_.at("source");
+      user.GetDestination() = json_.at("destination");
+      messageCallback_(conn, mode, user);
       break;
     }
     case Mode_ModifyInfo:
     {
-
+      ClientInfo user;
+      user.GetAccount() = json_.at("account");
+      user.GetPasswd() = json_.at("passwd");
+      messageCallback_(conn, mode, user);
       break;
     }
     default:
