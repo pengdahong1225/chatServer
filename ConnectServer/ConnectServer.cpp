@@ -386,6 +386,8 @@ void ConnectServer::Login(const muduo::net::TcpConnectionPtr &conn, ClientInfo &
     }
     else if(udate_ret == DB_Error)
     {
+        std::cout<<"DB Error"<<std::endl;
+        LOG_ERROR << "DB Error";
         conn->forceClose();
         connections_.erase(conn);
         return;
@@ -461,6 +463,7 @@ void ConnectServer::UpdateLoginTime(const muduo::string& account)
 
 void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
 {
+    std::cout<<"ConnectServer::SendP2P"<<std::endl;
     if (connections_[conn] != "")
     {
         /* find connPtr(key) by destination(value) */
@@ -485,7 +488,7 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo
 
             // send response to source
             json_.clear();
-            json_["mode"] = Mode_ErrorResponse;
+            json_["mode"] = Mode_P2PResponse;
             json_["result"] = EN_Succ;
             json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();
@@ -494,7 +497,7 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo
         else // destination not online
         {
             json json_;
-            json_["mode"] = Mode_ErrorResponse;
+            json_["mode"] = Mode_P2PResponse;
             json_["result"] = EN_Done;
             json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();
@@ -514,6 +517,7 @@ void ConnectServer::SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInf
                             {
                                 return (item.second == user.GetDestination());
                             });
+        LOG_DEBUG << user.GetSource() << "send to" << user.GetDestination() << " Message : "<<user.GetMessage();
         if (iter != connections_.end()) // destination online
         {
             // send data to destination

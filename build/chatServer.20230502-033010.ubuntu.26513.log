@@ -1,0 +1,11 @@
+20230502 03:30:10.111566Z 26513 INFO  ConnectServer -  -> listen IP:port = 0.0.0.0:8888 - ConnectServer.cpp:15
+20230502 03:30:10.111572Z 26513 INFO  AppServer -  -> setThreadNum = 5 - main.cpp:36
+20230502 03:30:46.498790Z 26513 INFO  TcpServer::newConnection [ConnectServer] - new connection [ConnectServer-0.0.0.0:8888#1] from 192.168.111.1:56520 - TcpServer.cc:80
+20230502 03:30:46.498991Z 26515 INFO  192.168.111.1:56520 -> 192.168.111.128:8888 is UP - ConnectServer.cpp:32
+20230502 03:31:02.738304Z 26515 ERROR ConnectServer::GetUserData->DBServer::initDBServer fail :  - ConnectServer.cpp:240
+20230502 03:31:02.738432Z 26515 INFO  192.168.111.1:56520 -> 192.168.111.128:8888 is DOWN - ConnectServer.cpp:32
+20230502 03:31:02.738631Z 26513 INFO  TcpServer::removeConnectionInLoop [ConnectServer] - connection ConnectServer-0.0.0.0:8888#1 - TcpServer.cc:109
+20230502 03:31:02.745618Z 26513 INFO  TcpServer::newConnection [ConnectServer] - new connection [ConnectServer-0.0.0.0:8888#2] from 192.168.111.1:56525 - TcpServer.cc:80
+20230502 03:31:02.745876Z 26516 INFO  192.168.111.1:56525 -> 192.168.111.128:8888 is UP - ConnectServer.cpp:32
+20230502 03:31:40.185047Z 26516 INFO  192.168.111.1:56525 -> 192.168.111.128:8888 is DOWN - ConnectServer.cpp:32
+20230502 03:31:40.185667Z 26513 INFO  TcpServer::removeConnectionInLoop [ConnectServer] - connection ConnectServer-0.0.0.0:8888#2 - TcpServer.cc:109

@@ -4,7 +4,6 @@
 #include "../Common/code.h"
 #include "../Common/DBServer.h"
 #include "../ClientServer/ClientServer.h"
-#include "log.h"
 #include <unordered_map>
 #include <vector>
 #include <set>
