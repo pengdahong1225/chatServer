@@ -8,8 +8,9 @@
 #include <string>
 
 struct DBConfig{
-    const char* ip = "rm-2vcnd09f392wgd9hoho.rwlb.cn-chengdu.rds.aliyuncs.com"; //阿里云 RDS
-    const char* user = "messi_pengdahong";
+    //const char* ip = "rm-2vcnd09f392wgd9hoho.rwlb.cn-chengdu.rds.aliyuncs.com"; //阿里云 RDS
+    const char* ip = "43.136.132.31";
+    const char* user = "messi";
     const char* passwd = "1225Gkl_";
     const char* database = "chatServer";
 };

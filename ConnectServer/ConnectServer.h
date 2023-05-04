@@ -31,11 +31,13 @@ private:
     void onStringMessage(const muduo::net::TcpConnectionPtr &conn, const int &mode,
                          ClientInfo &userInfo);
 
+    /* 具体功能 */
     void Login(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
     void Register(const muduo::net::TcpConnectionPtr& conn, ClientInfo& user);
     void SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
     void SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
     void SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
+    void Search(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
 
     /* get userdata from mysql */
     DBResult GetUserData(const muduo::string& account, ClientInfo &user);

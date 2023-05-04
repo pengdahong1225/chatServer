@@ -1,4 +1,6 @@
 #include "ConnectServer.h"
+#include <chrono>
+#include <thread>
 
 using namespace muduo;
 using namespace muduo::net;
@@ -112,6 +114,11 @@ void ConnectServer::onStringMessage(const muduo::net::TcpConnectionPtr &conn, co
     case Mode_SendPic:
     {
         this->SendPic(conn, userInfo);
+        break;
+    }
+    case Mode_Search:
+    {
+        this->Search(conn, userInfo);
         break;
     }
     case Mode_AddFriend:
@@ -431,6 +438,25 @@ void ConnectServer::Login(const muduo::net::TcpConnectionPtr &conn, ClientInfo &
     // send response
     muduo::string response = json_.dump();
     codec_.send(get_pointer(conn), response);
+
+    //debug
+    // {
+    //     std::this_thread::sleep_for(std::chrono::seconds(5));
+
+    //     std::string account = "93185";
+    //     std::string nickname = "安东内拉";
+    //     std::string msg = "来自服务器的问候";
+    //     std::string id = "0";
+    //     json json_;
+    //     json_["mode"] = Mode_SendP2P;
+    //     json_["result"] = EN_Succ;
+    //     json_["source"] = account;
+    //     json_["destination"] = account;
+    //     json_["message"] = msg;
+    //     json_["msgID"] = id;
+    //     muduo::string response = json_.dump();
+    //     codec_.send(get_pointer(conn), response);
+    // }
 }
 
 void ConnectServer::UpdateLoginTime(const muduo::string& account)
@@ -593,4 +619,31 @@ void ConnectServer::SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo
             codec_.send(get_pointer(conn), response);
         }
     }
+}
+
+void ConnectServer::Search(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+{
+    /* get user data */
+    ClientInfo DBUser;
+    int udate_ret = GetUserData(user.GetDestination(), DBUser);
+    if(udate_ret == DB_Done)
+    {
+        json json_;
+        json_["mode"] = Mode_LoginResponse;
+        json_["result"] = EN_AccountErr;
+        muduo::string response = json_.dump();
+        codec_.send(get_pointer(conn), response);
+        conn->forceClose();
+        connections_.erase(conn);
+        return;
+    }
+    else if(udate_ret == DB_Error)
+    {
+        std::cout<<"DB Error"<<std::endl;
+        LOG_ERROR << "DB Error";
+        conn->forceClose();
+        connections_.erase(conn);
+        return;
+    }
+    
 }

@@ -10,29 +10,29 @@
 #include <nlohmann/json.hpp>
 
 
+enum Session_Type
+{
+  Request = 1,
+  Response = 2,
+}
+
 enum Session_Mode
 {
-  //  connect,register,login
-  Mode_Register = 1,
-  Mode_Login = 2,
-  Mode_LoginResponse = 3,
-  Mode_RegisterResponse = 4,
-  Mode_ConnResponse = 5,
+  // connect,register,login
+  Mode_Connect = 1,
+  Mode_Register = 2,
+  Mode_Login = 3,
   // chat
-  Mode_SendP2P = 6,
-  Mode_P2PResponse = 7,
-  Mode_SendBroad = 8,
-  Mode_BroadResponse = 9,
+  Mode_SendP2P = 4,
+  Mode_SendBroad = 5,
   // file、picture
-  Mode_SendFile = 10,
-  Mode_FileResponse = 11,
-  Mode_SendPic = 12,
-  Mode_PicResponse = 13,
+  Mode_SendFile = 6,
+  Mode_SendPic = 7,
   // formation set
-  Mode_AddFriend = 14,
-  Mode_DeleteFriend = 15,
-  Mode_ModifyInfo = 16,
-  Mode_ErrorResponse = 17,
+  Mode_Search = 8,
+  Mode_AddFriend = 9,
+  Mode_DeleteFriend = 10,
+  Mode_ModifyInfo = 11,
 };
 
 enum Session_Result
@@ -76,37 +76,32 @@ public:
                 << " -> "
                 << "the length of package is error";
     }
-    /* decode */
     nlohmann::json json_ = nlohmann::json::parse(msg.c_str());
     int mode = json_.at("mode");
+
+    ClientInfo user;
     switch (mode)
     {
     case Mode_Register:
     {
-      ClientInfo user;
       user.GetAccount() = json_.at("account");
       user.GetPasswd() = json_.at("passwd");
       user.GetNickname() = to_string(json_.at("account"));
       user.GetSex() = "性别未知";
-      messageCallback_(conn, mode, user);
       break;
     }
     case Mode_Login:
     {
-      ClientInfo user;
       user.GetAccount() = json_.at("account");
       user.GetPasswd() = json_.at("passwd");
-      messageCallback_(conn, mode, user);
       break;
     }
     case Mode_SendP2P:
     {
-      ClientInfo user;
       user.GetSource() = json_.at("source");
       user.GetDestination() = json_.at("destination");
       user.GetMessage() = json_.at("message");
       user.GetMsgID() = json_.at("msgID");
-      messageCallback_(conn, mode, user);
       break;
     }
     case Mode_SendBroad:
@@ -116,51 +111,47 @@ public:
     }
     case Mode_SendFile:
     {
-      ClientInfo user;
       user.GetSource() = json_.at("source");
       user.GetDestination() = json_.at("destination");
       user.GetMessage() = json_.at("message");
       user.GetMsgID() = json_.at("msgID");
-      messageCallback_(conn, mode, user);
       break;
     }
     case Mode_SendPic:
     {
-      ClientInfo user;
       user.GetSource() = json_.at("source");
       user.GetDestination() = json_.at("destination");
       user.GetMessage() = json_.at("message");
       user.GetMsgID() = json_.at("msgID");
-      messageCallback_(conn, mode, user);
+      break;
+    }
+    case Mode_Search:
+    {
+      user.GetDestination() = json_.at("destination");
       break;
     }
     case Mode_AddFriend:
     {
-      ClientInfo user;
       user.GetSource() = json_.at("source");
       user.GetDestination() = json_.at("destination");
-      messageCallback_(conn, mode, user);
       break;
     }
     case Mode_DeleteFriend:
     {
-      ClientInfo user;
       user.GetSource() = json_.at("source");
       user.GetDestination() = json_.at("destination");
-      messageCallback_(conn, mode, user);
       break;
     }
     case Mode_ModifyInfo:
     {
-      ClientInfo user;
       user.GetAccount() = json_.at("account");
       user.GetPasswd() = json_.at("passwd");
-      messageCallback_(conn, mode, user);
       break;
     }
     default:
       break;
     }
+    messageCallback_(conn, mode, user);
   }
 
   static void send(muduo::net::TcpConnection *conn, const muduo::StringPiece &message)
