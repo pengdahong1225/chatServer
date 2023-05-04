@@ -14,7 +14,7 @@ enum Session_Type
 {
   Request = 1,
   Response = 2,
-}
+};
 
 enum Session_Mode
 {
@@ -33,6 +33,7 @@ enum Session_Mode
   Mode_AddFriend = 9,
   Mode_DeleteFriend = 10,
   Mode_ModifyInfo = 11,
+  Mode_Done = 12,
 };
 
 enum Session_Result

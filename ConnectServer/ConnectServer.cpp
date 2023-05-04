@@ -39,7 +39,8 @@ void ConnectServer::onConnection(const muduo::net::TcpConnectionPtr &conn)
     {
         this->connections_.insert(ConnectionPair(conn, "")); // initial account = 0
         json json_;
-        json_["mode"] = Mode_ConnResponse;
+        json_["type"] = Response;
+        json_["mode"] = Mode_Connect;
         json_["result"] = EN_Succ;
         muduo::string response = json_.dump();
         codec_.send(get_pointer(conn), response);
@@ -70,10 +71,11 @@ void ConnectServer::onStringMessage(const muduo::net::TcpConnectionPtr &conn, co
                                      {
                                          return (item.second == account);
                                      });
-            if (iter != connections_.end())
+            if (iter != connections_.end()) // Repeated Login by "one account"
             {
                 json json_;
-                json_["mode"] = Mode_LoginResponse;
+                json_["type"] = Response;
+                json_["mode"] = Mode_Login;
                 json_["result"] = EN_Repeated;
                 muduo::string response = json_.dump();
                 codec_.send(get_pointer(conn), response);
@@ -85,10 +87,11 @@ void ConnectServer::onStringMessage(const muduo::net::TcpConnectionPtr &conn, co
             connections_[conn] = account;
             this->Login(conn, userInfo);
         }
-        else // Repeated Login by "same conn"
+        else // Repeated Login by "one conn"
         {
             json json_;
-            json_["mode"] = Mode_LoginResponse;
+            json_["type"] = Response;
+            json_["mode"] = Mode_Login;
             json_["result"] = EN_Repeated;
             muduo::string response = json_.dump();
             codec_.send(get_pointer(conn), response);
@@ -139,7 +142,8 @@ void ConnectServer::onStringMessage(const muduo::net::TcpConnectionPtr &conn, co
     default:
     {
         json json_;
-        json_["mode"] = Mode_ErrorResponse;
+        json_["type"] = Response;
+        json_["mode"] = Mode_Done;
         json_["result"] = EN_ModeErr;
         muduo::string response = json_.dump();
         codec_.send(get_pointer(conn), response);
@@ -197,7 +201,8 @@ void ConnectServer::Register(const muduo::net::TcpConnectionPtr &conn, ClientInf
     if (rows > 0) // find this user -> Reapeted register
     {
         json json_;
-        json_["mode"] = Mode_RegisterResponse;
+        json_["type"] = Response;
+        json_["mode"] = Mode_Register;
         json_["result"] = EN_Repeated;
         muduo::string response = json_.dump();
         codec_.send(get_pointer(conn), response);
@@ -229,7 +234,8 @@ void ConnectServer::Register(const muduo::net::TcpConnectionPtr &conn, ClientInf
         return;
     }
     json json_;
-    json_["mode"] = Mode_RegisterResponse;
+    json_["type"] = Response;
+    json_["mode"] = Mode_Register;
     json_["result"] = EN_Succ;
     muduo::string response = json_.dump();
     codec_.send(get_pointer(conn), response);
@@ -383,7 +389,8 @@ void ConnectServer::Login(const muduo::net::TcpConnectionPtr &conn, ClientInfo &
     if(udate_ret == DB_Done)
     {
         json json_;
-        json_["mode"] = Mode_LoginResponse;
+        json_["type"] = Response;
+        json_["mode"] = Mode_Login;
         json_["result"] = EN_AccountErr;
         muduo::string response = json_.dump();
         codec_.send(get_pointer(conn), response);
@@ -403,7 +410,8 @@ void ConnectServer::Login(const muduo::net::TcpConnectionPtr &conn, ClientInfo &
     if (user.GetPasswd() != DBUser.GetPasswd())
     {
         json json_;
-        json_["mode"] = Mode_LoginResponse;
+        json_["type"] = Response;
+        json_["mode"] = Mode_Login;
         json_["result"] = EN_PasswdErr;
         muduo::string response = json_.dump();
         codec_.send(get_pointer(conn), response);
@@ -412,7 +420,8 @@ void ConnectServer::Login(const muduo::net::TcpConnectionPtr &conn, ClientInfo &
         return;
     }
     json json_;
-    json_["mode"] = Mode_LoginResponse;
+    json_["type"] = Response;
+    json_["mode"] = Mode_Login;
     json_["result"] = EN_Succ;
     json_["account"] = DBUser.GetAccount();
     json_["nickname"] = DBUser.GetNickname();
@@ -503,6 +512,7 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo
         {
             // send data to destination
             json json_;
+            json_["type"] = Request;
             json_["mode"] = Mode_SendP2P;
             json_["result"] = EN_Succ;
             json_["source"] = user.GetSource();
@@ -514,7 +524,8 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo
 
             // send response to source
             json_.clear();
-            json_["mode"] = Mode_P2PResponse;
+            json_["type"] = Response;
+            json_["mode"] = Mode_SendP2P;
             json_["result"] = EN_Succ;
             json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();
@@ -523,7 +534,8 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo
         else // destination not online
         {
             json json_;
-            json_["mode"] = Mode_P2PResponse;
+            json_["type"] = Response;
+            json_["mode"] = Mode_SendP2P;
             json_["result"] = EN_Done;
             json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();
@@ -548,6 +560,7 @@ void ConnectServer::SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInf
         {
             // send data to destination
             json json_;
+            json_["type"] = Response;
             json_["mode"] = Mode_SendFile;
             json_["result"] = EN_Succ;
             json_["source"] = user.GetSource();
@@ -559,7 +572,8 @@ void ConnectServer::SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInf
 
             // send response to source
             json_.clear();
-            json_["mode"] = Mode_FileResponse;
+            json_["type"] = Response;
+            json_["mode"] = Mode_SendFile;
             json_["result"] = EN_Succ;
             json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();
@@ -568,7 +582,8 @@ void ConnectServer::SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInf
         else // destination not online
         {
             json json_;
-            json_["mode"] = Mode_FileResponse;
+            json_["type"] = Response;
+            json_["mode"] = Mode_SendFile;
             json_["result"] = EN_Done;
             json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();
@@ -592,6 +607,7 @@ void ConnectServer::SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo
         {
             // send data to destination
             json json_;
+            json_["type"] = Response;
             json_["mode"] = Mode_SendPic;
             json_["result"] = EN_Succ;
             json_["source"] = user.GetSource();
@@ -603,7 +619,8 @@ void ConnectServer::SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo
 
             // send response to source
             json_.clear();
-            json_["mode"] = Mode_PicResponse;
+            json_["type"] = Response;
+            json_["mode"] = Mode_SendPic;
             json_["result"] = EN_Succ;
             json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();
@@ -612,7 +629,8 @@ void ConnectServer::SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo
         else // destination not online
         {
             json json_;
-            json_["mode"] = Mode_PicResponse;
+            json_["type"] = Response;
+            json_["mode"] = Mode_SendPic;
             json_["result"] = EN_Done;
             json_["msgID"] = user.GetMsgID();
             muduo::string response = json_.dump();
@@ -629,8 +647,9 @@ void ConnectServer::Search(const muduo::net::TcpConnectionPtr &conn, ClientInfo&
     if(udate_ret == DB_Done)
     {
         json json_;
-        json_["mode"] = Mode_LoginResponse;
-        json_["result"] = EN_AccountErr;
+        json_["type"] = Response;
+        json_["mode"] = Mode_Search;
+        json_["result"] = EN_Done;
         muduo::string response = json_.dump();
         codec_.send(get_pointer(conn), response);
         conn->forceClose();
@@ -645,5 +664,15 @@ void ConnectServer::Search(const muduo::net::TcpConnectionPtr &conn, ClientInfo&
         connections_.erase(conn);
         return;
     }
-    
+    json json_;
+    json_["type"] = Response;
+    json_["mode"] = Mode_Search;
+    json_["result"] = EN_Succ;
+    json_["account"] = DBUser.GetAccount();
+    json_["nickname"] = DBUser.GetNickname();
+    json_["sex"] = DBUser.GetSex();
+    json_["phone"] = DBUser.GetPhone();
+    json_["email"] = DBUser.GetEmail();
+    muduo::string data = json_.dump();  //序列化
+    codec_.send(get_pointer(conn), data);
 }
