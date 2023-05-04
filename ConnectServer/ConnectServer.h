@@ -38,6 +38,8 @@ private:
     void SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
     void SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
     void Search(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
+    void Addfriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
+    void CheckAddFriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);//同意/拒绝添加为好友
 
     /* get userdata from mysql */
     DBResult GetUserData(const muduo::string& account, ClientInfo &user);
@@ -45,6 +47,9 @@ private:
     DBResult GetFriendList(const muduo::string& account, std::vector<ClientInfo>& friendList);
     /* update login time */
     void UpdateLoginTime(const muduo::string& account);
+
+    bool FindUser(ClientInfo &user);
+    
 
 private:
     muduo::net::TcpServer server_;

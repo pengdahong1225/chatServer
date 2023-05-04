@@ -32,8 +32,9 @@ enum Session_Mode
   Mode_Search = 8,
   Mode_AddFriend = 9,
   Mode_DeleteFriend = 10,
-  Mode_ModifyInfo = 11,
-  Mode_Done = 12,
+  Mode_AnswerForNewFriend = 11,
+  Mode_ModifyInfo = 12,
+  Mode_Done = 13,
 };
 
 enum Session_Result
@@ -135,6 +136,13 @@ public:
     {
       user.GetSource() = json_.at("source");
       user.GetDestination() = json_.at("destination");
+      break;
+    }
+    case Mode_AnswerForNewFriend:
+    {
+      user.GetSource() = json_.at("source");
+      user.GetDestination() = json_.at("destination");
+      user.GetResult() = json_.at("result");
       break;
     }
     case Mode_DeleteFriend:

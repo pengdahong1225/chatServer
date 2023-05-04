@@ -126,7 +126,12 @@ void ConnectServer::onStringMessage(const muduo::net::TcpConnectionPtr &conn, co
     }
     case Mode_AddFriend:
     {
-
+        this->Addfriend(conn, userInfo);
+        break;
+    }
+    case Mode_AnswerForNewFriend:
+    {
+        this->CheckAddFriend(conn, userInfo);
         break;
     }
     case Mode_DeleteFriend:
@@ -447,25 +452,6 @@ void ConnectServer::Login(const muduo::net::TcpConnectionPtr &conn, ClientInfo &
     // send response
     muduo::string response = json_.dump();
     codec_.send(get_pointer(conn), response);
-
-    //debug
-    // {
-    //     std::this_thread::sleep_for(std::chrono::seconds(5));
-
-    //     std::string account = "93185";
-    //     std::string nickname = "安东内拉";
-    //     std::string msg = "来自服务器的问候";
-    //     std::string id = "0";
-    //     json json_;
-    //     json_["mode"] = Mode_SendP2P;
-    //     json_["result"] = EN_Succ;
-    //     json_["source"] = account;
-    //     json_["destination"] = account;
-    //     json_["message"] = msg;
-    //     json_["msgID"] = id;
-    //     muduo::string response = json_.dump();
-    //     codec_.send(get_pointer(conn), response);
-    // }
 }
 
 void ConnectServer::UpdateLoginTime(const muduo::string& account)
@@ -675,4 +661,234 @@ void ConnectServer::Search(const muduo::net::TcpConnectionPtr &conn, ClientInfo&
     json_["email"] = DBUser.GetEmail();
     muduo::string data = json_.dump();  //序列化
     codec_.send(get_pointer(conn), data);
+}
+
+void ConnectServer::Addfriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+{
+    bool ret = FindUser(user);
+    if(ret)
+    {
+        // 已经是好友
+        json json_;
+        json_["type"] = Response;
+        json_["mode"] = Mode_AddFriend;
+        json_["result"] = EN_Repeated;
+        muduo::string data = json_.dump();  //序列化
+        codec_.send(get_pointer(conn), data);
+        return;
+    }
+    else
+    {
+        /* find connPtr(key) by destination(value) */
+        std::unordered_map<muduo::net::TcpConnectionPtr, muduo::string>::iterator iter = connections_.end();
+        iter = std::find_if(connections_.begin(), connections_.end(),
+                            [&user](const std::pair<muduo::net::TcpConnectionPtr, muduo::string> &item)
+                            {
+                                return (item.second == user.GetDestination());
+                            });
+        if (iter != connections_.end()) // destination online
+        {
+            json json_;
+            json_["type"] = Response;
+            json_["mode"] = Mode_AddFriend;
+            json_["result"] = EN_Succ;
+            muduo::string response = json_.dump();
+            codec_.send(get_pointer(conn), response);
+            
+            json_.clear();
+            json_["type"] = Request;
+            json_["mode"] = Mode_AddFriend;
+            json_["source"] = user.GetSource();
+            json_["destination"] = user.GetDestination();
+            muduo::string response = json_.dump();
+            codec_.send(get_pointer(iter->first), response);
+        }
+        else
+        {
+            // destination 不在线
+            json json_;
+            json_["type"] = Response;
+            json_["mode"] = Mode_AddFriend;
+            json_["result"] = EN_Done;
+            muduo::string response = json_.dump();
+            codec_.send(get_pointer(conn), response);
+        }
+    }
+}
+
+bool ConnectServer::FindUser(ClientInfo &user)
+{
+    MYSQL *mysql = DBServer::MYSQL_INIT(nullptr);
+    mysql = DBServer::initDBServer(mysql);
+    if (!mysql)
+    {
+        LOG_ERROR << "ConnectServer::GetFriendList"
+                  << "->"
+                  << "DBServer::initDBServer fail : " << mysql_error(mysql);
+        DBServer::closeDBServer(mysql);
+        return;
+    }
+
+    /* find in id_1 */
+    char sql[128];
+    memset(sql, '0', sizeof(sql));
+    sprintf(sql, "select * from user_relationship where id_1=%s", user.GetSource().c_str());
+    int ret = DBServer::query(mysql, sql);
+    if (ret != 0)
+    {
+        LOG_ERROR << "ConnectServer::FindUser"
+                  << " -> "
+                  << "DBServer::query fail : " << mysql_error(mysql);
+        DBServer::closeDBServer(mysql);
+        return;
+    }
+    MYSQL_RES *result = DBServer::store_result(mysql);
+    if (result == NULL)
+    {
+        LOG_ERROR << "ConnectServer::FindUser"
+                  << " -> "
+                  << "DBServer::store_result fail : " << mysql_error(mysql);
+        DBServer::free_result(result);
+        DBServer::closeDBServer(mysql);
+        return;
+    }
+    uint64_t rows = DBServer::result_numRow(result);
+    if (rows <= 0)
+    {
+        DBServer::free_result(result);
+        DBServer::closeDBServer(mysql);
+        return;
+    }
+    MYSQL_ROW rdata = nullptr;
+    for(int i=0; i<rows; i++)
+    {
+        rdata = DBServer::fetch_row(result);
+        if (!rdata)
+        {
+            LOG_ERROR << "ConnectServer::FindUser"
+                    << "->"
+                    << "DBServer::fetch_row fail : " << mysql_error(mysql);
+            DBServer::free_result(result);
+            DBServer::closeDBServer(mysql);
+            return;
+        }
+        // 判断id_2是否等于destination
+        if(strcmp(user.GetDestination().c_str(), rdata[1]) == 0)
+        {
+            DBServer::free_result(result);
+            DBServer::closeDBServer(mysql);
+            return true;
+        }
+    }
+
+    /* find in id_1 */
+    char sql[128];
+    memset(sql, '0', sizeof(sql));
+    sprintf(sql, "select * from user_relationship where id_2=%s", user.GetSource().c_str());
+    int ret = DBServer::query(mysql, sql);
+    if (ret != 0)
+    {
+        LOG_ERROR << "ConnectServer::FindUser"
+                  << " -> "
+                  << "DBServer::query fail : " << mysql_error(mysql);
+        DBServer::closeDBServer(mysql);
+        return;
+    }
+    MYSQL_RES *result = DBServer::store_result(mysql);
+    if (result == NULL)
+    {
+        LOG_ERROR << "ConnectServer::FindUser"
+                  << " -> "
+                  << "DBServer::store_result fail : " << mysql_error(mysql);
+        DBServer::free_result(result);
+        DBServer::closeDBServer(mysql);
+        return;
+    }
+    uint64_t rows = DBServer::result_numRow(result);
+    if (rows <= 0)
+    {
+        DBServer::free_result(result);
+        DBServer::closeDBServer(mysql);
+        return;
+    }
+    MYSQL_ROW rdata = nullptr;
+    for(int i=0; i<rows; i++)
+    {
+        rdata = DBServer::fetch_row(result);
+        if (!rdata)
+        {
+            LOG_ERROR << "ConnectServer::FindUser"
+                    << "->"
+                    << "DBServer::fetch_row fail : " << mysql_error(mysql);
+            DBServer::free_result(result);
+            DBServer::closeDBServer(mysql);
+            return;
+        }
+        // 判断id_1是否等于destination
+        if(strcmp(user.GetDestination().c_str(), rdata[0]) == 0)
+        {
+            DBServer::free_result(result);
+            DBServer::closeDBServer(mysql);
+            return true;
+        }
+    }
+    DBServer::free_result(result);
+    DBServer::closeDBServer(mysql);
+    return false;
+}
+
+void ConnectServer::CheckAddFriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+{
+    if(user.GetResult() == EN_Done)
+    {
+        // 拒绝...暂时什么都不做
+    }
+    else if(user.GetResult() == EN_Succ)
+    {
+        // 同意
+        /* insert into DB */
+        MYSQL *mysql = DBServer::MYSQL_INIT(nullptr);
+        mysql = DBServer::initDBServer(mysql);
+        if (!mysql)
+        {
+            LOG_ERROR << "ConnectServer::Addfriend"
+                    << "->"
+                    << "DBServer::initDBServer fail : " << mysql_error(mysql);
+            DBServer::closeDBServer(mysql);
+            return;
+        }
+        char sql[128];
+        memset(sql, '0', sizeof(sql));
+        sprintf(sql, "insert into user_relationship values('%s','%s')", user.GetSource().c_str(), user.GetDestination().c_str());
+        if (DBServer::query(mysql, sql) != 0)
+        {
+            LOG_ERROR << "ConnectServer::Addfriend"
+                    << " -> "
+                    << "DBServer::query : " << mysql_error(mysql);
+            conn->forceClose();
+            connections_.erase(conn);
+            DBServer::closeDBServer(mysql);
+            return;
+        }
+
+        // 通知
+        json json_;
+        json_["type"] = Response;
+        json_["mode"] = Mode_AnswerForNewFriend;
+        json_["result"] = EN_Succ;
+        json_["source"] = user.GetSource();//申请者
+        json_["destination"] = user.GetDestination();//同意者
+        muduo::string response = json_.dump();
+
+        codec_.send(get_pointer(conn), response);
+
+        std::unordered_map<muduo::net::TcpConnectionPtr, muduo::string>::iterator iter = connections_.end();
+        iter = std::find_if(connections_.begin(), connections_.end(),
+                            [&user](const std::pair<muduo::net::TcpConnectionPtr, muduo::string> &item)
+                            {
+                                return (item.second == user.GetSource());
+                            });
+        if (iter != connections_.end())
+            codec_.send(get_pointer(iter->first), response);
+    }
 }
