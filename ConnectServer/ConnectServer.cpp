@@ -892,3 +892,8 @@ void ConnectServer::CheckAddFriend(const muduo::net::TcpConnectionPtr &conn, Cli
             codec_.send(get_pointer(iter->first), response);
     }
 }
+
+void ConnectServer::DeleteFriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+{
+    
+}

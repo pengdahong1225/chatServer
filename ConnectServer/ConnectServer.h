@@ -40,6 +40,7 @@ private:
     void Search(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
     void Addfriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
     void CheckAddFriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);//同意/拒绝添加为好友
+    void DeleteFriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user);
 
     /* get userdata from mysql */
     DBResult GetUserData(const muduo::string& account, ClientInfo &user);
