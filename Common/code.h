@@ -9,13 +9,6 @@
 #include <muduo/net/TcpConnection.h>
 #include <nlohmann/json.hpp>
 
-
-enum Session_Type
-{
-  Request = 1,
-  Response = 2,
-};
-
 enum Session_Mode
 {
   // connect,register,login
@@ -35,6 +28,12 @@ enum Session_Mode
   Mode_AnswerForNewFriend = 11,
   Mode_ModifyInfo = 12,
   Mode_Done = 13,
+};
+
+enum Session_Type
+{
+  Request = 1,
+  Response = 2,
 };
 
 enum Session_Result
@@ -108,23 +107,7 @@ public:
     }
     case Mode_SendBroad:
     {
-      //...暂时没有群聊
-      break;
-    }
-    case Mode_SendFile:
-    {
-      user.GetSource() = json_.at("source");
-      user.GetDestination() = json_.at("destination");
-      user.GetMessage() = json_.at("message");
-      user.GetMsgID() = json_.at("msgID");
-      break;
-    }
-    case Mode_SendPic:
-    {
-      user.GetSource() = json_.at("source");
-      user.GetDestination() = json_.at("destination");
-      user.GetMessage() = json_.at("message");
-      user.GetMsgID() = json_.at("msgID");
+      //...暂时没写群聊
       break;
     }
     case Mode_Search:
@@ -155,6 +138,20 @@ public:
     {
       user.GetAccount() = json_.at("account");
       user.GetPasswd() = json_.at("passwd");
+      break;
+    }
+    case Mode_SendPic:
+    {
+      user.GetSource() = json_.at("source");
+      user.GetDestination() = json_.at("destination");
+      user.GetMessage() = json_.at("message");
+      user.GetMsgID() = json_.at("msgID");
+      user.GetFileName() = json_.at("filename");
+      break;
+    }
+    case Mode_SendFile:
+    {
+      //...暂时没写文件
       break;
     }
     default:

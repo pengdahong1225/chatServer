@@ -223,7 +223,7 @@ void ConnectServer::Register(const muduo::net::TcpConnectionPtr &conn, ClientInf
     uint64_t timer = std::atol(time.toString().c_str());
 
     sprintf(sql, "insert into userdata values('%s','%s','%s','%s','%s','%s',%ld,%ld)", user.GetAccount().c_str(),
-            user.GetPasswd().c_str(), user.GetNickname().c_str(), user.GetSex().c_str(), user.GetPhone().c_str(), user.GetEmail().c_str(),timer, timer);
+            user.GetPasswd().c_str(), user.GetNickname().c_str(), user.GetSex().c_str(), user.GetPhone().c_str(), user.GetEmail().c_str(), timer, timer);
     std::cout << "register sql = " << sql << std::endl;
     ret = DBServer::query(mysql, sql);
     if (ret != 0)
@@ -248,7 +248,7 @@ void ConnectServer::Register(const muduo::net::TcpConnectionPtr &conn, ClientInf
     DBServer::closeDBServer(mysql);
 }
 
-DBResult ConnectServer::GetUserData(const muduo::string& account, ClientInfo &user)
+DBResult ConnectServer::GetUserData(const muduo::string &account, ClientInfo &user)
 {
     // get one userdata from mysql
     MYSQL *mysql = DBServer::MYSQL_INIT(nullptr);
@@ -264,7 +264,7 @@ DBResult ConnectServer::GetUserData(const muduo::string& account, ClientInfo &us
     char sql[128];
     memset(sql, '0', sizeof(sql));
     sprintf(sql, "select * from userdata where account=%s", account.c_str());
-    std::cout<< "Login sql = " <<sql<<std::endl;
+    std::cout << "Login sql = " << sql << std::endl;
     int ret = DBServer::query(mysql, sql);
     if (ret != 0)
     {
@@ -305,10 +305,10 @@ DBResult ConnectServer::GetUserData(const muduo::string& account, ClientInfo &us
     }
     user.GetAccount() = rdata[0];
     user.GetPasswd() = rdata[1];
-    user.GetNickname() = rdata[2] == nullptr ? "": rdata[2];
+    user.GetNickname() = rdata[2] == nullptr ? "" : rdata[2];
     user.GetSex() = rdata[3];
-    user.GetPhone() = rdata[4] == nullptr ? "": rdata[4];
-    user.GetEmail() = rdata[5] == nullptr ? "": rdata[5];
+    user.GetPhone() = rdata[4] == nullptr ? "" : rdata[4];
+    user.GetEmail() = rdata[5] == nullptr ? "" : rdata[5];
     user.GetLogintime() = rdata[6];
     user.GetRegistertime() = rdata[7];
     DBServer::free_result(result);
@@ -316,7 +316,7 @@ DBResult ConnectServer::GetUserData(const muduo::string& account, ClientInfo &us
     return DB_Succ;
 }
 
-DBResult ConnectServer::GetFriendList(const muduo::string& account, std::vector<ClientInfo>& friendList)
+DBResult ConnectServer::GetFriendList(const muduo::string &account, std::vector<ClientInfo> &friendList)
 {
     MYSQL *mysql = DBServer::MYSQL_INIT(nullptr);
     mysql = DBServer::initDBServer(mysql);
@@ -361,27 +361,27 @@ DBResult ConnectServer::GetFriendList(const muduo::string& account, std::vector<
         return DB_Done;
     }
     std::set<muduo::string> set_;
-    for(int i = 0; i< rows; i++)
+    for (int i = 0; i < rows; i++)
     {
         MYSQL_ROW rdata = DBServer::fetch_row(result);
-        for(int j=0; j < nums; j++)
+        for (int j = 0; j < nums; j++)
         {
-            if(account != muduo::string(rdata[j]))
+            if (account != muduo::string(rdata[j]))
                 set_.insert(muduo::string(rdata[j]));
         }
     }
     DBServer::free_result(result);
     DBServer::closeDBServer(mysql);
-    if(set_.empty())
+    if (set_.empty())
         return DB_Done;
     /* get friends info */
-    for(auto iter : set_)
+    for (auto iter : set_)
     {
         ClientInfo user;
-        if(GetUserData(iter, user) == DB_Succ)
+        if (GetUserData(iter, user) == DB_Succ)
             friendList.push_back(user);
     }
-    if(friendList.empty())
+    if (friendList.empty())
         return DB_Done;
     return DB_Succ;
 }
@@ -391,7 +391,7 @@ void ConnectServer::Login(const muduo::net::TcpConnectionPtr &conn, ClientInfo &
     /* get user data */
     ClientInfo DBUser;
     int udate_ret = GetUserData(user.GetAccount(), DBUser);
-    if(udate_ret == DB_Done)
+    if (udate_ret == DB_Done)
     {
         json json_;
         json_["type"] = Response;
@@ -403,9 +403,9 @@ void ConnectServer::Login(const muduo::net::TcpConnectionPtr &conn, ClientInfo &
         connections_.erase(conn);
         return;
     }
-    else if(udate_ret == DB_Error)
+    else if (udate_ret == DB_Error)
     {
-        std::cout<<"DB Error"<<std::endl;
+        std::cout << "DB Error" << std::endl;
         LOG_ERROR << "DB Error";
         conn->forceClose();
         connections_.erase(conn);
@@ -435,26 +435,26 @@ void ConnectServer::Login(const muduo::net::TcpConnectionPtr &conn, ClientInfo &
     json_["email"] = DBUser.GetEmail();
     /* get friends accountList */
     std::vector<ClientInfo> friendList;
-    int friend_ret = GetFriendList(user.GetAccount(),friendList);
-    if(friend_ret == DB_Done || friend_ret == DB_Error)
+    int friend_ret = GetFriendList(user.GetAccount(), friendList);
+    if (friend_ret == DB_Done || friend_ret == DB_Error)
         json_["friendnum"] = 0;
     else
     {
         size_t friendNum = friendList.size();
         json_["friendnum"] = friendNum;
-        for(size_t i=0; i<friendList.size(); i++)
+        for (size_t i = 0; i < friendList.size(); i++)
             json_["friendList"][i] = {{"account", friendList[i].GetAccount()},
-                                     {"nickname", friendList[i].GetNickname()},
-                                     {"phone", friendList[i].GetPhone()},
-                                     {"sex", friendList[i].GetSex()},
-                                     {"email", friendList[i].GetEmail()}};
+                                      {"nickname", friendList[i].GetNickname()},
+                                      {"phone", friendList[i].GetPhone()},
+                                      {"sex", friendList[i].GetSex()},
+                                      {"email", friendList[i].GetEmail()}};
     }
     // send response
     muduo::string response = json_.dump();
     codec_.send(get_pointer(conn), response);
 }
 
-void ConnectServer::UpdateLoginTime(const muduo::string& account)
+void ConnectServer::UpdateLoginTime(const muduo::string &account)
 {
     // update login time
     MYSQL *mysql = DBServer::MYSQL_INIT(nullptr);
@@ -471,7 +471,7 @@ void ConnectServer::UpdateLoginTime(const muduo::string& account)
     uint64_t timer = std::atol(time.toString().c_str());
     char sql[128];
     memset(sql, '0', sizeof(sql));
-    sprintf(sql,"UPDATE userdata SET login_time=%ld where account = %s", timer, account.c_str());
+    sprintf(sql, "UPDATE userdata SET login_time=%ld where account = %s", timer, account.c_str());
     int ret = DBServer::query(mysql, sql);
     if (ret != 0)
         LOG_ERROR << "ConnectServer::onStringMessage"
@@ -482,9 +482,9 @@ void ConnectServer::UpdateLoginTime(const muduo::string& account)
     DBServer::closeDBServer(mysql);
 }
 
-void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo &user)
 {
-    std::cout<<"ConnectServer::SendP2P"<<std::endl;
+    std::cout << "ConnectServer::SendP2P" << std::endl;
     if (connections_[conn] != "")
     {
         /* find connPtr(key) by destination(value) */
@@ -530,7 +530,7 @@ void ConnectServer::SendP2P(const muduo::net::TcpConnectionPtr &conn, ClientInfo
     }
 }
 
-void ConnectServer::SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+void ConnectServer::SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInfo &user)
 {
     if (connections_[conn] != "")
     {
@@ -541,7 +541,7 @@ void ConnectServer::SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInf
                             {
                                 return (item.second == user.GetDestination());
                             });
-        LOG_DEBUG << user.GetSource() << "send to" << user.GetDestination() << " Message : "<<user.GetMessage();
+        LOG_DEBUG << user.GetSource() << "send to" << user.GetDestination() << " Message : " << user.GetMessage();
         if (iter != connections_.end()) // destination online
         {
             // send data to destination
@@ -553,7 +553,7 @@ void ConnectServer::SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInf
             json_["destination"] = user.GetDestination();
             json_["message"] = user.GetMessage();
             json_["msgID"] = user.GetMsgID();
-            muduo::string data = json_.dump();  //序列化
+            muduo::string data = json_.dump(); // 序列化
             codec_.send(get_pointer(iter->first), data);
 
             // send response to source
@@ -578,7 +578,7 @@ void ConnectServer::SendFile(const muduo::net::TcpConnectionPtr &conn, ClientInf
     }
 }
 
-void ConnectServer::SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+void ConnectServer::SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo &user)
 {
     if (connections_[conn] != "")
     {
@@ -600,7 +600,8 @@ void ConnectServer::SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo
             json_["destination"] = user.GetDestination();
             json_["message"] = user.GetMessage();
             json_["msgID"] = user.GetMsgID();
-            muduo::string data = json_.dump();  //序列化
+            json_["filename"] = user.GetFileName();
+            muduo::string data = json_.dump(); // 序列化
             codec_.send(get_pointer(iter->first), data);
 
             // send response to source
@@ -625,12 +626,12 @@ void ConnectServer::SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo
     }
 }
 
-void ConnectServer::Search(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+void ConnectServer::Search(const muduo::net::TcpConnectionPtr &conn, ClientInfo &user)
 {
     /* get user data */
     ClientInfo DBUser;
     int udate_ret = GetUserData(user.GetDestination(), DBUser);
-    if(udate_ret == DB_Done)
+    if (udate_ret == DB_Done)
     {
         json json_;
         json_["type"] = Response;
@@ -642,9 +643,9 @@ void ConnectServer::Search(const muduo::net::TcpConnectionPtr &conn, ClientInfo&
         connections_.erase(conn);
         return;
     }
-    else if(udate_ret == DB_Error)
+    else if (udate_ret == DB_Error)
     {
-        std::cout<<"DB Error"<<std::endl;
+        std::cout << "DB Error" << std::endl;
         LOG_ERROR << "DB Error";
         conn->forceClose();
         connections_.erase(conn);
@@ -659,21 +660,21 @@ void ConnectServer::Search(const muduo::net::TcpConnectionPtr &conn, ClientInfo&
     json_["sex"] = DBUser.GetSex();
     json_["phone"] = DBUser.GetPhone();
     json_["email"] = DBUser.GetEmail();
-    muduo::string data = json_.dump();  //序列化
+    muduo::string data = json_.dump(); // 序列化
     codec_.send(get_pointer(conn), data);
 }
 
-void ConnectServer::Addfriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+void ConnectServer::Addfriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo &user)
 {
     bool ret = FindUser(user);
-    if(ret)
+    if (ret)
     {
         // 已经是好友
         json json_;
         json_["type"] = Response;
         json_["mode"] = Mode_AddFriend;
         json_["result"] = EN_Repeated;
-        muduo::string data = json_.dump();  //序列化
+        muduo::string data = json_.dump(); // 序列化
         codec_.send(get_pointer(conn), data);
         return;
     }
@@ -694,13 +695,14 @@ void ConnectServer::Addfriend(const muduo::net::TcpConnectionPtr &conn, ClientIn
             json_["result"] = EN_Succ;
             muduo::string response = json_.dump();
             codec_.send(get_pointer(conn), response);
-            
+
             json_.clear();
             json_["type"] = Request;
             json_["mode"] = Mode_AddFriend;
             json_["source"] = user.GetSource();
             json_["destination"] = user.GetDestination();
-            muduo::string response = json_.dump();
+            response.clear();
+            response = json_.dump();
             codec_.send(get_pointer(iter->first), response);
         }
         else
@@ -726,21 +728,20 @@ bool ConnectServer::FindUser(ClientInfo &user)
                   << "->"
                   << "DBServer::initDBServer fail : " << mysql_error(mysql);
         DBServer::closeDBServer(mysql);
-        return;
+        return false;
     }
 
     /* find in id_1 */
     char sql[128];
     memset(sql, '0', sizeof(sql));
     sprintf(sql, "select * from user_relationship where id_1=%s", user.GetSource().c_str());
-    int ret = DBServer::query(mysql, sql);
-    if (ret != 0)
+    if (DBServer::query(mysql, sql) != 0)
     {
         LOG_ERROR << "ConnectServer::FindUser"
                   << " -> "
                   << "DBServer::query fail : " << mysql_error(mysql);
         DBServer::closeDBServer(mysql);
-        return;
+        return false;
     }
     MYSQL_RES *result = DBServer::store_result(mysql);
     if (result == NULL)
@@ -750,30 +751,30 @@ bool ConnectServer::FindUser(ClientInfo &user)
                   << "DBServer::store_result fail : " << mysql_error(mysql);
         DBServer::free_result(result);
         DBServer::closeDBServer(mysql);
-        return;
+        return false;
     }
     uint64_t rows = DBServer::result_numRow(result);
     if (rows <= 0)
     {
         DBServer::free_result(result);
         DBServer::closeDBServer(mysql);
-        return;
+        return false;
     }
     MYSQL_ROW rdata = nullptr;
-    for(int i=0; i<rows; i++)
+    for (int i = 0; i < rows; i++)
     {
         rdata = DBServer::fetch_row(result);
         if (!rdata)
         {
             LOG_ERROR << "ConnectServer::FindUser"
-                    << "->"
-                    << "DBServer::fetch_row fail : " << mysql_error(mysql);
+                      << "->"
+                      << "DBServer::fetch_row fail : " << mysql_error(mysql);
             DBServer::free_result(result);
             DBServer::closeDBServer(mysql);
-            return;
+            return false;
         }
         // 判断id_2是否等于destination
-        if(strcmp(user.GetDestination().c_str(), rdata[1]) == 0)
+        if (strcmp(user.GetDestination().c_str(), rdata[1]) == 0)
         {
             DBServer::free_result(result);
             DBServer::closeDBServer(mysql);
@@ -781,20 +782,22 @@ bool ConnectServer::FindUser(ClientInfo &user)
         }
     }
 
-    /* find in id_1 */
-    char sql[128];
+    //=========================================================
+
+    /* find in id_2*/
     memset(sql, '0', sizeof(sql));
     sprintf(sql, "select * from user_relationship where id_2=%s", user.GetSource().c_str());
-    int ret = DBServer::query(mysql, sql);
-    if (ret != 0)
+
+    if (DBServer::query(mysql, sql) != 0)
     {
         LOG_ERROR << "ConnectServer::FindUser"
                   << " -> "
                   << "DBServer::query fail : " << mysql_error(mysql);
         DBServer::closeDBServer(mysql);
-        return;
+        return false;
     }
-    MYSQL_RES *result = DBServer::store_result(mysql);
+    DBServer::free_result(result);
+    result = DBServer::store_result(mysql);
     if (result == NULL)
     {
         LOG_ERROR << "ConnectServer::FindUser"
@@ -802,30 +805,31 @@ bool ConnectServer::FindUser(ClientInfo &user)
                   << "DBServer::store_result fail : " << mysql_error(mysql);
         DBServer::free_result(result);
         DBServer::closeDBServer(mysql);
-        return;
+        return false;
     }
-    uint64_t rows = DBServer::result_numRow(result);
+    rows = -1;
+    rows = DBServer::result_numRow(result);
     if (rows <= 0)
     {
         DBServer::free_result(result);
         DBServer::closeDBServer(mysql);
-        return;
+        return false;
     }
-    MYSQL_ROW rdata = nullptr;
-    for(int i=0; i<rows; i++)
+    rdata = nullptr;
+    for (int i = 0; i < rows; i++)
     {
         rdata = DBServer::fetch_row(result);
         if (!rdata)
         {
             LOG_ERROR << "ConnectServer::FindUser"
-                    << "->"
-                    << "DBServer::fetch_row fail : " << mysql_error(mysql);
+                      << "->"
+                      << "DBServer::fetch_row fail : " << mysql_error(mysql);
             DBServer::free_result(result);
             DBServer::closeDBServer(mysql);
-            return;
+            return false;
         }
         // 判断id_1是否等于destination
-        if(strcmp(user.GetDestination().c_str(), rdata[0]) == 0)
+        if (strcmp(user.GetDestination().c_str(), rdata[0]) == 0)
         {
             DBServer::free_result(result);
             DBServer::closeDBServer(mysql);
@@ -837,13 +841,13 @@ bool ConnectServer::FindUser(ClientInfo &user)
     return false;
 }
 
-void ConnectServer::CheckAddFriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+void ConnectServer::CheckAddFriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo &user)
 {
-    if(user.GetResult() == EN_Done)
+    if (user.GetResult() == EN_Done)
     {
         // 拒绝...暂时什么都不做
     }
-    else if(user.GetResult() == EN_Succ)
+    else if (user.GetResult() == EN_Succ)
     {
         // 同意
         /* insert into DB */
@@ -852,8 +856,8 @@ void ConnectServer::CheckAddFriend(const muduo::net::TcpConnectionPtr &conn, Cli
         if (!mysql)
         {
             LOG_ERROR << "ConnectServer::Addfriend"
-                    << "->"
-                    << "DBServer::initDBServer fail : " << mysql_error(mysql);
+                      << "->"
+                      << "DBServer::initDBServer fail : " << mysql_error(mysql);
             DBServer::closeDBServer(mysql);
             return;
         }
@@ -863,8 +867,8 @@ void ConnectServer::CheckAddFriend(const muduo::net::TcpConnectionPtr &conn, Cli
         if (DBServer::query(mysql, sql) != 0)
         {
             LOG_ERROR << "ConnectServer::Addfriend"
-                    << " -> "
-                    << "DBServer::query : " << mysql_error(mysql);
+                      << " -> "
+                      << "DBServer::query : " << mysql_error(mysql);
             conn->forceClose();
             connections_.erase(conn);
             DBServer::closeDBServer(mysql);
@@ -876,8 +880,8 @@ void ConnectServer::CheckAddFriend(const muduo::net::TcpConnectionPtr &conn, Cli
         json_["type"] = Response;
         json_["mode"] = Mode_AnswerForNewFriend;
         json_["result"] = EN_Succ;
-        json_["source"] = user.GetSource();//申请者
-        json_["destination"] = user.GetDestination();//同意者
+        json_["source"] = user.GetSource();           // 申请者
+        json_["destination"] = user.GetDestination(); // 同意者
         muduo::string response = json_.dump();
 
         codec_.send(get_pointer(conn), response);
@@ -893,7 +897,47 @@ void ConnectServer::CheckAddFriend(const muduo::net::TcpConnectionPtr &conn, Cli
     }
 }
 
-void ConnectServer::DeleteFriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo& user)
+void ConnectServer::DeleteFriend(const muduo::net::TcpConnectionPtr &conn, ClientInfo &user)
 {
-    
+    MYSQL *mysql = DBServer::MYSQL_INIT(nullptr);
+    mysql = DBServer::initDBServer(mysql);
+    if (!mysql)
+    {
+        LOG_ERROR << "ConnectServer::DeleteFriend"
+                  << "->"
+                  << "DBServer::initDBServer fail : " << mysql_error(mysql);
+        DBServer::closeDBServer(mysql);
+        return;
+    }
+
+    char sql[128];
+    memset(sql, '0', sizeof(sql));
+    sprintf(sql, "DELETE from user_relationship where (id_1 = %s AND id_2 = %s) OR (id_1 = %s AND id_2 = %s)",
+            user.GetSource().c_str(), user.GetDestination().c_str(), user.GetDestination().c_str(), user.GetSource().c_str());
+    int ret = DBServer::query(mysql, sql);
+    if (ret != 0)
+        LOG_ERROR << "ConnectServer::DeleteFriend"
+                  << "->"
+                  << "DBServer::query fail : " << mysql_error(mysql);
+    DBServer::closeDBServer(mysql);
+
+    // 通知
+    json json_;
+    json_["type"] = Response;
+    json_["mode"] = Mode_DeleteFriend;
+    json_["result"] = EN_Succ;
+    json_["source"] = user.GetSource();           // 主动删
+    json_["destination"] = user.GetDestination(); // 被动删
+    muduo::string response = json_.dump();
+
+    codec_.send(get_pointer(conn), response);
+
+    std::unordered_map<muduo::net::TcpConnectionPtr, muduo::string>::iterator iter = connections_.end();
+    iter = std::find_if(connections_.begin(), connections_.end(),
+                        [&user](const std::pair<muduo::net::TcpConnectionPtr, muduo::string> &item)
+                        {
+                            return (item.second == user.GetDestination());
+                        });
+    if (iter != connections_.end())
+        codec_.send(get_pointer(iter->first), response);
 }

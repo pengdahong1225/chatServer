@@ -65,3 +65,8 @@ int& ClientInfo::GetResult()
 {
     return result;
 }
+
+muduo::string& ClientInfo::GetFileName()
+{
+    return filename;
+}

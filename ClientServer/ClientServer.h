@@ -26,6 +26,7 @@ public:
     muduo::string& GetDestination();
     muduo::string& GetMessage();
     muduo::string& GetMsgID();
+    muduo::string& GetFileName();
 
     int& GetResult();
 private:
@@ -41,6 +42,7 @@ private:
     muduo::string source;
     muduo::string destination;
     muduo::string message;
+    muduo::string filename;
 
     muduo::string messageID; //客户端要用，服务端不用管直接转发
 
