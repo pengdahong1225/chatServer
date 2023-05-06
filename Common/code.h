@@ -71,12 +71,18 @@ public:
     buf->retrieveAll();
     int32_t length = std::atoi(data.substr(0, kHeaderLen).c_str());
     muduo::string msg = data.substr(kHeaderLen);
+
+    std::cout<<"length = "<<length<<std::endl;
+    std::cout<<"msg.size() = "<<msg.size()<<std::endl;
+
     if (length != msg.size())
     {
       LOG_ERROR << "LengthHeaderCodec::onMessage"
                 << " -> "
                 << "the length of package is error";
     }
+
+    // 转json解析
     nlohmann::json json_ = nlohmann::json::parse(msg.c_str());
     int mode = json_.at("mode");
 
@@ -147,6 +153,8 @@ public:
       user.GetMessage() = json_.at("message");
       user.GetMsgID() = json_.at("msgID");
       user.GetFileName() = json_.at("filename");
+      user.GetNumPiece() = json_.at("num_piece");
+      user.GetPiece() = json_.at("piece");
       break;
     }
     case Mode_SendFile:

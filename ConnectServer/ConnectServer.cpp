@@ -593,7 +593,7 @@ void ConnectServer::SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo
         {
             // send data to destination
             json json_;
-            json_["type"] = Response;
+            json_["type"] = Request;
             json_["mode"] = Mode_SendPic;
             json_["result"] = EN_Succ;
             json_["source"] = user.GetSource();
@@ -601,6 +601,8 @@ void ConnectServer::SendPic(const muduo::net::TcpConnectionPtr &conn, ClientInfo
             json_["message"] = user.GetMessage();
             json_["msgID"] = user.GetMsgID();
             json_["filename"] = user.GetFileName();
+            json_["num_piece"] = user.GetNumPiece();
+            json_["piece"] = user.GetPiece();
             muduo::string data = json_.dump(); // 序列化
             codec_.send(get_pointer(iter->first), data);
 
@@ -863,7 +865,14 @@ void ConnectServer::CheckAddFriend(const muduo::net::TcpConnectionPtr &conn, Cli
         }
         char sql[128];
         memset(sql, '0', sizeof(sql));
-        sprintf(sql, "insert into user_relationship values('%s','%s')", user.GetSource().c_str(), user.GetDestination().c_str());
+        sprintf(sql,"SELECT COUNT(*) FROM user_relationship");
+        DBServer::query(mysql, sql);
+        MYSQL_RES *result = DBServer::store_result(mysql);
+        MYSQL_ROW rdata = DBServer::fetch_row(result);
+        int len = std::atoi(rdata[0]);
+
+        memset(sql, '0', sizeof(sql));
+        sprintf(sql, "insert into user_relationship values(%d, '%s','%s')", len+1 ,user.GetSource().c_str(), user.GetDestination().c_str());
         if (DBServer::query(mysql, sql) != 0)
         {
             LOG_ERROR << "ConnectServer::Addfriend"

@@ -1,0 +1,22 @@
+20230506 02:46:11.640581Z 140959 INFO  ConnectServer -  -> listen IP:port = 0.0.0.0:8888 - ConnectServer.cpp:17
+20230506 02:46:11.640589Z 140959 INFO  AppServer -  -> setThreadNum = 5 - main.cpp:36
+20230506 02:46:11.740345Z 140959 INFO  TcpServer::newConnection [ConnectServer] - new connection [ConnectServer-0.0.0.0:8888#1] from 171.218.62.237:17870 - TcpServer.cc:80
+20230506 02:46:11.740391Z 140961 INFO  171.218.62.237:17870 -> 10.0.0.5:8888 is UP - ConnectServer.cpp:34
+20230506 02:46:12.300894Z 140959 INFO  TcpServer::newConnection [ConnectServer] - new connection [ConnectServer-0.0.0.0:8888#2] from 171.218.62.237:17871 - TcpServer.cc:80
+20230506 02:46:12.300954Z 140962 INFO  171.218.62.237:17871 -> 10.0.0.5:8888 is UP - ConnectServer.cpp:34
+20230506 02:47:09.508578Z 140961 INFO  171.218.62.237:17870 -> 10.0.0.5:8888 is DOWN - ConnectServer.cpp:34
+20230506 02:47:09.508616Z 140959 INFO  TcpServer::removeConnectionInLoop [ConnectServer] - connection ConnectServer-0.0.0.0:8888#1 - TcpServer.cc:109
+20230506 02:47:12.028900Z 140962 INFO  171.218.62.237:17871 -> 10.0.0.5:8888 is DOWN - ConnectServer.cpp:34
+20230506 02:47:12.028982Z 140959 INFO  TcpServer::removeConnectionInLoop [ConnectServer] - connection ConnectServer-0.0.0.0:8888#2 - TcpServer.cc:109
+20230506 02:47:37.300248Z 140959 INFO  TcpServer::newConnection [ConnectServer] - new connection [ConnectServer-0.0.0.0:8888#3] from 171.218.62.237:17882 - TcpServer.cc:80
+20230506 02:47:37.300312Z 140963 INFO  171.218.62.237:17882 -> 10.0.0.5:8888 is UP - ConnectServer.cpp:34
+20230506 02:47:46.300549Z 140959 INFO  TcpServer::newConnection [ConnectServer] - new connection [ConnectServer-0.0.0.0:8888#4] from 171.218.62.237:17883 - TcpServer.cc:80
+20230506 02:47:46.300598Z 140964 INFO  171.218.62.237:17883 -> 10.0.0.5:8888 is UP - ConnectServer.cpp:34
+20230506 02:49:29.876346Z 140963 INFO  171.218.62.237:17882 -> 10.0.0.5:8888 is DOWN - ConnectServer.cpp:34
+20230506 02:49:29.876383Z 140959 INFO  TcpServer::removeConnectionInLoop [ConnectServer] - connection ConnectServer-0.0.0.0:8888#3 - TcpServer.cc:109
+20230506 02:49:38.628363Z 140964 INFO  171.218.62.237:17883 -> 10.0.0.5:8888 is DOWN - ConnectServer.cpp:34
+20230506 02:49:38.628401Z 140959 INFO  TcpServer::removeConnectionInLoop [ConnectServer] - connection ConnectServer-0.0.0.0:8888#4 - TcpServer.cc:109
+20230506 02:50:21.579946Z 140959 INFO  TcpServer::newConnection [ConnectServer] - new connection [ConnectServer-0.0.0.0:8888#5] from 171.218.62.237:17913 - TcpServer.cc:80
+20230506 02:50:21.580010Z 140965 INFO  171.218.62.237:17913 -> 10.0.0.5:8888 is UP - ConnectServer.cpp:34
+20230506 02:50:49.414886Z 140959 INFO  TcpServer::newConnection [ConnectServer] - new connection [ConnectServer-0.0.0.0:8888#6] from 171.218.62.237:17914 - TcpServer.cc:80
+20230506 02:50:49.414948Z 140961 INFO  171.218.62.237:17914 -> 10.0.0.5:8888 is UP - ConnectServer.cpp:34

@@ -70,3 +70,13 @@ muduo::string& ClientInfo::GetFileName()
 {
     return filename;
 }
+
+int& ClientInfo::GetNumPiece()
+{
+    return num_piece;
+}
+
+int& ClientInfo::GetPiece()
+{
+    return piece;
+}
